@@ -13,27 +13,34 @@ def plot_matrix(M, output_dir):
     plt.imshow(X, interpolation = 'none')
 
     b = 18
-    for i in range(1, 8):
+    for i in range(1, 8+1):
         plt.axvline(i * b - 0.5, ls="-", lw=0.5, color="black")
         plt.axhline(i * b - 0.5, ls="-", lw=0.5, color="black")
 
     b=6
-    for i in range(1, 3*8):
+    for i in range(1, 3*8+3):
         plt.axvline(i * b - 0.5, ls=":", lw=0.3, color="black")
         plt.axhline(i * b - 0.5, ls=":", lw=0.3, color="black")
 
     ax = plt.gca()
 
-    plt.xticks(np.array(range(0, 144, 18)) - 0.5, [f"$M_{i}$" for i in range(8)])
-    # plt.yticks(np.array(range(8, 144, 18)) + 0.5, [f"M{i}" for i in range(8)])
-    plt.yticks(np.array(range(0, 144, 6)) - 0.5, [f"$L_{i}$" for i in 8*list(range(3))])
+    #plt.xticks(np.array(range(0, 18+144, 18)) - 0.5, [f"$M_{i}$" for i in range(8)])
+    #plt.xticks(np.array(range(0, 18+144, 18)) - 0.5, [f"$M_{i}$" for i in range(8)])
+    tick_labels = []
+    for layer in range(3):
+        tick_labels.append(f"$L_{layer}$")
+    for module in range(8):
+        for layer in range(3):
+            tick_labels.append(f"$L_{layer}$ $M_{module}$")
+
+    plt.xticks(np.array(range(0, 18+144, 6)) + 2.5,  tick_labels, rotation=90)
+    plt.yticks(np.array(range(0, 18+144, 6)) + 2.5,  tick_labels)
 
     plt.colorbar()
     plt.title("Alignment Solution Matrix\n" + "$a = x, y, z, \\alpha, \\beta, \\gamma$ for each Module/Layer")
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f"solution_matrix.pdf"))
     plt.savefig(os.path.join(output_dir, f"solution_matrix.png"))
-    plt.show()
     plt.close()
 
 
@@ -68,7 +75,6 @@ def plot_residual_per_module(df, layer, axis, output_dir):
     # plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f"residual_per_module_L{layer}_{axis}.pdf"))
     plt.savefig(os.path.join(output_dir, f"residual_per_module_L{layer}_{axis}.png"))
-    plt.show()
     plt.close()
 
     
@@ -94,7 +100,6 @@ def plot_chi2(df, cut, output_dir, title=None):
     # plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f"chi2.pdf"))
     plt.savefig(os.path.join(output_dir, f"chi2.png"))
-    plt.show()
     plt.close()
 
 
@@ -128,5 +133,4 @@ def plot_hit_position_per_module(df, layer, axis, output_dir, local=False):
     # plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f"hit_position_per_module_L{layer}_{axis}.pdf"))
     plt.savefig(os.path.join(output_dir, f"hit_position_per_module_L{layer}_{axis}.png"))
-    plt.show()
     plt.close()
