@@ -12,35 +12,65 @@ def plot_matrix(M, output_dir):
     X[X == 0] = np.nan
     plt.imshow(X, interpolation = 'none')
 
-    b = 18
-    for i in range(1, 8+1):
-        plt.axvline(i * b - 0.5, ls="-", lw=0.5, color="black")
-        plt.axhline(i * b - 0.5, ls="-", lw=0.5, color="black")
+    #b = 18
+    #for i in range(1, 8+1):
+    #    plt.axvline(i * b - 0.5, ls="-", lw=0.5, color="black")
+    #    plt.axhline(i * b - 0.5, ls="-", lw=0.5, color="black")
 
-    b=6
-    for i in range(1, 3*8+3):
-        plt.axvline(i * b - 0.5, ls=":", lw=0.3, color="black")
-        plt.axhline(i * b - 0.5, ls=":", lw=0.3, color="black")
+    #b=6
+    #for i in range(1, 3*8+3):
+    #    plt.axvline(i * b - 0.5, ls=":", lw=0.3, color="black")
+    #    plt.axhline(i * b - 0.5, ls=":", lw=0.3, color="black")
 
     ax = plt.gca()
 
     #plt.xticks(np.array(range(0, 18+144, 18)) - 0.5, [f"$M_{i}$" for i in range(8)])
     #plt.xticks(np.array(range(0, 18+144, 18)) - 0.5, [f"$M_{i}$" for i in range(8)])
-    tick_labels = []
-    for layer in range(3):
-        tick_labels.append(f"$L_{layer}$")
-    for module in range(8):
-        for layer in range(3):
-            tick_labels.append(f"$L_{layer}$ $M_{module}$")
-
-    plt.xticks(np.array(range(0, 18+144, 6)) + 2.5,  tick_labels, rotation=90)
-    plt.yticks(np.array(range(0, 18+144, 6)) + 2.5,  tick_labels)
+    #tick_labels = []
+    #for layer in range(3):
+    #    tick_labels.append(f"$L_{layer}$")
+    #for module in range(8):
+    #    for layer in range(3):
+    #        tick_labels.append(f"$L_{layer}$ $M_{module}$")
+    
+    #plt.xticks(np.array(range(0, 18+144, 6)) + 2.5,  tick_labels, rotation=90)
+    #plt.yticks(np.array(range(0, 18+144, 6)) + 2.5,  tick_labels)
 
     plt.colorbar()
     plt.title("Alignment Solution Matrix\n" + "$a = x, y, z, \\alpha, \\beta, \\gamma$ for each Module/Layer")
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f"solution_matrix.pdf"))
     plt.savefig(os.path.join(output_dir, f"solution_matrix.png"))
+    plt.close()
+
+
+def plot_residual_per_layer(df, layer, axis, output_dir):
+    fig, axs = plt.subplots(1, 1, dpi=120, sharex=True, sharey=True, gridspec_kw={"wspace": 0.025, "hspace": 0.05})
+    xlim = None
+    if axis == "x": xlim = (-2000, 2000)
+    if axis == "y": xlim = (-100, 100)
+    bins = 30
+    # bins = int(np.ceil((xmax - xmin) / (sigma_x * 1000))) * 5
+    #if axis == "x": bins = int((xmax - xmin) / (sigma_x * 1000))
+    #if axis == "y": bins = int((xmax - xmin) / (sigma_y * 1000))
+    #print(xmax, xmin, xmax-xmin, bins)
+    
+    tmp = np.linspace(*xlim)
+    axs = plt.gca()
+    series = df.query(f"{xlim[0]} < initial_track_residual_{axis}{layer} * 1000 < {xlim[1]}")[f"initial_track_residual_{axis}{layer}"] * 1000
+    
+    _, edges, _ = axs.hist(series, bins=bins, range=xlim, density=True)
+    axs.plot(tmp, scipy.stats.norm.pdf(tmp, loc=series.mean(), scale=series.std()), 
+                    label=r"$\mu$" + f" = {series.mean():.3f}" + r" $\mu$m " + r"$\sigma$" + f" = {series.std():.3f}" + r" $\mu$m")
+    axs.legend(loc=2, fontsize=8, frameon=False)
+    axs.set_xlabel(axis + r" Residual [$\mu$m]")
+    axs.set_ylabel("arb. units")
+    #axs.text(0.1, 0.5, f"M{module}", fontsize=8, transform = axs[i, j].transAxes)
+    axs.set_ylim(0, axs.get_ylim()[1]*1.2)
+    fig.suptitle(f"Layer {layer}")
+    # plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"residual_per_layer_L{layer}_{axis}.pdf"))
+    plt.savefig(os.path.join(output_dir, f"residual_per_layer_L{layer}_{axis}.png"))
     plt.close()
 
 
@@ -62,7 +92,7 @@ def plot_residual_per_module(df, layer, axis, output_dir):
     for module in range(0, 8):
         i = module % 4
         j = module // 4
-        series = df.query(f"{xlim[0]} < initial_track_residual_{axis}{layer} < {xlim[1]}").query(f"module{layer} == {module}")[f"initial_track_residual_{axis}{layer}"] * 1000
+        series = df.query(f"{xlim[0]} < initial_track_residual_{axis}{layer} * 1000 < {xlim[1]}").query(f"module{layer} == {module}")[f"initial_track_residual_{axis}{layer}"] * 1000
         _, edges, _ = axs[i, j].hist(series, bins=bins, range=xlim, density=True)
         axs[i, j].plot(tmp, scipy.stats.norm.pdf(tmp, loc=series.mean(), scale=series.std()), 
                        label=r"$\mu$" + f" = {series.mean():.3f}" + r" $\mu$m " + r"$\sigma$" + f" = {series.std():.3f}" + r" $\mu$m")
@@ -131,6 +161,6 @@ def plot_hit_position_per_module(df, layer, axis, output_dir, local=False):
     axs[i, j].set_ylim(0, axs[i, j].get_ylim()[1]*1.2)
     fig.suptitle(f"Layer {layer}")
     # plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, f"hit_position_per_module_L{layer}_{axis}.pdf"))
-    plt.savefig(os.path.join(output_dir, f"hit_position_per_module_L{layer}_{axis}.png"))
+    plt.savefig(os.path.join(output_dir, f"hit_position_per_module_L{layer}_{axis}_{'local' if local else 'global'}.pdf"))
+    plt.savefig(os.path.join(output_dir, f"hit_position_per_module_L{layer}_{axis}_{'local' if local else 'global'}.png"))
     plt.close()

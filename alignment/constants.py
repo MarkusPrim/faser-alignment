@@ -22,8 +22,12 @@ result_cols = [
 
 runs = {
     # Test Beam Data, 150 GeV Muons
-    3443: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003443/Faser-Physics-*"),
-    3444: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003444/Faser-Physics-*"),
-    3445: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003445/Faser-Physics-*"),
-    3446: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003446/Faser-Physics-*"),
+    #3443: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003443/Faser-Physics-*"),
+    #3444: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003444/Faser-Physics-*"),
+    #3445: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003445/Faser-Physics-*"),
+    #3446: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003446/Faser-Physics-*"),
+    #0: glob("/home/mapr/projects/faser-alignment/alignment/mc/*")
+    #3446: glob("/home/mapr/projects/faser-alignment/alignment/data/Faser-Physics-003446.baseline/Faser-Physics-*"),
+    # Lets do it
+    3446: glob("/home/mapr/projects/faser-alignment/alignment/data/old/Faser-Physics-003446.xy.3.it0/Faser-Physics-*"),
 }

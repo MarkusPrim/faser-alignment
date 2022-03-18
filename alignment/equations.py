@@ -5,7 +5,7 @@ from uncertainties import unumpy as unp
 import matplotlib.pyplot as plt
 from copy import copy
 
-from alignment.constants import RESCALING, sigma_x, sigma_y, result_cols
+from alignment.constants import RESCALING, result_cols
 
 
 def module_index(layer, module, offset=0):
@@ -52,9 +52,21 @@ def b(x, y):
     ])
 
 
-def What(z, sigma_x, sigma_y):
+def What(z, sigma_x, sigma_y, sigma_rho):
+    print(sigma_x)
+    print(sigma_y)
+    print(sigma_rho)
+    #sigma_rho0=[0, 0, 0]  # FIXME
     _A = A(z)
-    _W = np.diag([1/sigma_x**2, 1/sigma_x**2, 1/sigma_x**2, 1/sigma_y**2, 1/sigma_y**2, 1/sigma_y**2])
+    #_W = np.diag([1/sigma_x**2, 1/sigma_x**2, 1/sigma_x**2, 1/sigma_y**2, 1/sigma_y**2, 1/sigma_y**2])
+    _W = np.array([
+        [1./sigma_x[0], 0, 0, 0./sigma_rho[0], 0, 0],
+        [0, 1./sigma_x[1], 0, 0, 0./sigma_rho[1], 0],
+        [0, 0, 1./sigma_x[2], 0, 0, 0./sigma_rho[2]],
+        [0./sigma_rho[0], 0, 0, 1./sigma_y[0], 0, 0],
+        [0, 0./sigma_rho[1], 0, 0, 1./sigma_y[1], 0],
+        [0, 0, 0./sigma_rho[2], 0, 0, 1./sigma_y[2]],
+    ])
     return (
         np.identity(_A.shape[0]) - _A @ np.linalg.inv(
             _A.transpose() @ _W @ _A
@@ -67,8 +79,8 @@ def dr_da_layer(x, y, mx, my):
     
     #drda_x = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
     #drda_y = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
-    drda_x = lambda x, y: np.array([-1, 0, 0, 0, 0, 0]) * RESCALING
-    drda_y = lambda x, y: np.array([0, -1, 0, 0, 0, 0]) * RESCALING
+    drda_x = lambda x, y: np.array([-1, 0, 0, 0, 0, y]) * RESCALING
+    drda_y = lambda x, y: np.array([0, -1, 0, 0, 0, -x]) * RESCALING
     #drda_x = lambda x, y: np.array([-1, 0, mx, mx*y, -mx*x, y]) * RESCALING
     #drda_y = lambda x, y: np.array([0, -1, my, my*y, -my*x, -x]) * RESCALING
     
@@ -88,8 +100,8 @@ def dr_da_module(x, y, mx, my):
     spacer = 6
     #drda_x = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
     #drda_y = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
-    drda_x = lambda x, y: np.array([-1, 0, 0, 0, 0, 0]) * RESCALING
-    drda_y = lambda x, y: np.array([0, -1, 0, 0, 0, 0]) * RESCALING
+    drda_x = lambda x, y: np.array([-1, 0, 0, 0, 0, y]) * RESCALING
+    drda_y = lambda x, y: np.array([0, -1, 0, 0, 0, -x]) * RESCALING
     #drda_x = lambda x, y: np.array([-1, 0, mx, mx*y, -mx*x, y]) * RESCALING
     #drda_y = lambda x, y: np.array([0, -1, my, my*y, -my*x, -x]) * RESCALING
     
@@ -123,14 +135,25 @@ def build_alignment_chi2_equation_module(df):
         module1 = x[18]
         module2 = x[19]
 
+        #sigma_x_ = x[20:23]
+        #sigma_y_ = x[23:26]
+        #sigma_rho_ = x[26:29]
+        from constants import sigma_x as s_x
+        from constants import sigma_y as s_y
+        sigma_x_ = [s_x ** 2, s_x ** 2, s_x ** 2]
+        sigma_y_ = [s_y ** 2, s_y ** 2, s_y ** 2]
+        sigma_rho_ = [0,0,0]
+
+
         # Module Components
-        _t = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x, sigma_y) @ r_
-        _M = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x, sigma_y) @ dr_da_layer(x_, y_, *m_)
+        _t = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ r_
+        _M = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ dr_da_layer(x_, y_, *m_)
         
         i0 = int(module_index(0, module0))
         i1 = int(module_index(1, module1))
         i2 = int(module_index(2, module2))
         
+        # Place entries at the correct position in the global matrix
         t[i0:][:6] += _t[ 0:][:6]
         t[i1:][:6] += _t[ 6:][:6]
         t[i2:][:6] += _t[12:][:6]
@@ -164,30 +187,21 @@ def build_alignment_chi2_equation_layer(df):
         m_ = x[9:11]
         r_ = x[11:17]
 
+        #sigma_x_ = x[17:20]
+        #sigma_y_ = x[20:23]
+        #sigma_rho_ = x[23:26]
+        from constants import sigma_x as s_x
+        from constants import sigma_y as s_y
+        sigma_x_ = [s_x ** 2, s_x ** 2, s_x ** 2]
+        sigma_y_ = [s_y ** 2, s_y ** 2, s_y ** 2]
+        sigma_rho_ = [0,0,0]
+        
         # Layer Components
-        _t = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x, sigma_y) @ r_
-        _M = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x, sigma_y) @ dr_da_layer(x_, y_, *m_)
-
-        i0 = int(layer_index(0))
-        i1 = int(layer_index(1))
-        i2 = int(layer_index(2))
-
-        t[i0:][:6] += _t[ 0:][:6]
-        t[i1:][:6] += _t[ 6:][:6]
-        t[i2:][:6] += _t[12:][:6]
-        
-        M[i0:, i0:][:6, :6] += _M[ 0:,  0:][:6, :6]
-        M[i0:, i1:][:6, :6] += _M[ 0:,  6:][:6, :6]
-        M[i0:, i2:][:6, :6] += _M[ 0:, 12:][:6, :6]
-        
-        M[i1:, i0:][:6, :6] += _M[ 6:,  0:][:6, :6]
-        M[i1:, i1:][:6, :6] += _M[ 6:,  6:][:6, :6]
-        M[i1:, i2:][:6, :6] += _M[ 6:, 12:][:6, :6]
-        
-        M[i2:, i0:][:6, :6] += _M[12:,  0:][:6, :6]
-        M[i2:, i1:][:6, :6] += _M[12:,  6:][:6, :6]
-        M[i2:, i2:][:6, :6] += _M[12:, 12:][:6, :6]
-    
+        _t = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ r_
+        _M = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ dr_da_layer(x_, y_, *m_)
+                
+        t += _t
+        M += _M
     return t, M
 
 

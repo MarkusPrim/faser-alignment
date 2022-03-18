@@ -20,7 +20,7 @@ def align(output_dir, t, M, soft_mode_cut, cutoff, fix):
 
 if __name__ == "__main__":
 
-    CUTOFF = 0
+    CUTOFF = 100
     METEOROLOGY_alpha0_layer = np.zeros(18)
     METEOROLOGY_sigma0_layer = np.array(3 * [1e-1, 1e-1, 1e-1, 2e-3, 2e-3, 2e-3]) / np.array(3 * [*RESCALING])
     METEOROLOGY_alpha0_module = np.zeros(144)
