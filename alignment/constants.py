@@ -4,8 +4,8 @@ from glob import glob
 RESCALING = np.array([1e-1, 1e-1, 1e-1, 2e-3, 2e-3, 2e-3])  # Scale everything to same order of magnitude
 
 # TODO Write this out on data
-sigma_x = 0.8160  # Tobias (confirmed) number # 0.570 # TDR Number
-sigma_y = 0.0163  # Tobias (confirmed) number # 0.020 # TDR Number
+sigma_x = 0.800  # Tobias (confirmed) number # 0.570 # TDR Number
+sigma_y = 0.020  # Tobias (confirmed) number # 0.020 # TDR Number
 
 
 #result_cols = [
@@ -26,8 +26,7 @@ runs = {
     #3444: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003444/Faser-Physics-*"),
     #3445: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003445/Faser-Physics-*"),
     #3446: glob("/home/mapr/projects/faser-alignment-dev/faser-data/testbeam/Faser-Physics-003446/Faser-Physics-*"),
+    3446: glob("/home/mapr/projects/faser-alignment/alignment/data/Faser-Physics-003446/Faser-Physics-??????-?????"),
     #0: glob("/home/mapr/projects/faser-alignment/alignment/mc/*")
     #3446: glob("/home/mapr/projects/faser-alignment/alignment/data/Faser-Physics-003446.baseline/Faser-Physics-*"),
-    # Lets do it
-    3446: glob("/home/mapr/projects/faser-alignment/alignment/data/old/Faser-Physics-003446.xy.3.it0/Faser-Physics-*"),
 }

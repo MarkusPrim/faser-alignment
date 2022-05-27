@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 
-from alignment.equations import save_and_store_results_module, save_and_store_results_layer, solve_alignment_chi2_equation, apply_soft_mode_cut_to_chi2_equation, fix_parameters_in_chi2_equation
+from alignment.equations import save_and_store_results_module, solve_alignment_chi2_equation, apply_soft_mode_cut_to_chi2_equation, fix_parameters_in_chi2_equation
 from alignment.constants import RESCALING, runs
 from alignment.monitoring import plot_matrix
 
@@ -21,11 +21,8 @@ def align(output_dir, t, M, soft_mode_cut, cutoff, fix):
 if __name__ == "__main__":
 
     CUTOFF = 100
-    METEOROLOGY_alpha0_layer = np.zeros(18)
-    METEOROLOGY_sigma0_layer = np.array(3 * [1e-1, 1e-1, 1e-1, 2e-3, 2e-3, 2e-3]) / np.array(3 * [*RESCALING])
     METEOROLOGY_alpha0_module = np.zeros(144)
     METEOROLOGY_sigma0_module = np.array(8 * 3 * [1e-1, 1e-1, 1e-1, 2e-3, 2e-3, 2e-3]) / np.array(8 * 3 * [*RESCALING])
-    SOFT_MODE_CUT_layer = (METEOROLOGY_alpha0_layer, METEOROLOGY_sigma0_layer)
     SOFT_MODE_CUT_module = (METEOROLOGY_alpha0_module, METEOROLOGY_sigma0_module)
 
     
@@ -40,22 +37,12 @@ if __name__ == "__main__":
     print(f"Applied cutoff: {CUTOFF}")
     print(f"Applied fixes: {FIX}")
 
-    all_t_layer = []
-    all_M_layer = []
     all_t_module = []
     all_M_module = []
 
     for run in runs:
     
         data_dir = os.path.join("results", sys.argv[1], str(run))
-
-        output_dir = os.path.join(data_dir, "results_layer")
-        os.makedirs(output_dir, exist_ok=True)
-        t = np.load(os.path.join(data_dir, "t_layer.npy"))
-        M = np.load(os.path.join(data_dir, "M_layer.npy"))
-        all_t_layer.append(t)
-        all_M_layer.append(M)
-        save_and_store_results_layer(*align(output_dir, t, M, soft_mode_cut=SOFT_MODE_CUT_layer, cutoff=CUTOFF, fix=FIX), output_dir)
 
         output_dir = os.path.join(data_dir, "results_module")
         os.makedirs(output_dir, exist_ok=True)
@@ -68,12 +55,6 @@ if __name__ == "__main__":
 
     data_dir = os.path.join("results", sys.argv[1], "all")
 
-    output_dir = os.path.join(data_dir, "results_layer")
-    os.makedirs(output_dir, exist_ok=True)
-    t = sum(all_t_layer)
-    M = sum(all_M_layer)
-    save_and_store_results_layer(*align(output_dir, t, M, soft_mode_cut=SOFT_MODE_CUT_layer, cutoff=CUTOFF, fix=FIX), output_dir)
-
     output_dir = os.path.join(data_dir, "results_module")
     os.makedirs(output_dir, exist_ok=True)
     t = sum(all_t_module)
@@ -82,13 +63,6 @@ if __name__ == "__main__":
 
 
     data_dir = os.path.join("results", sys.argv[1], "none")
-
-    output_dir = os.path.join(data_dir, "results_layer")
-    os.makedirs(output_dir, exist_ok=True)
-    dim = 18
-    t = np.zeros(dim)
-    M = np.zeros((dim, dim))
-    save_and_store_results_layer(*align(output_dir, t, M, soft_mode_cut=SOFT_MODE_CUT_layer, cutoff=CUTOFF, fix=FIX), output_dir)
 
     output_dir = os.path.join(data_dir, "results_module")
     os.makedirs(output_dir, exist_ok=True)

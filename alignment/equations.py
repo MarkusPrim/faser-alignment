@@ -22,19 +22,6 @@ def module_index(layer, module, offset=0):
     return layer*6 + module*6*3
 
 
-def layer_index(layer):
-    """Calculates the offset-index of a specific layer in the alignment matrix.
-
-    Args:
-        layer (int): Layer Index
-        module (int): Module Index
-
-    Returns:
-        int: Offset-index inside alignment matrix.
-    """
-    return layer*6
-
-
 def f(z, cx, mx, cy, my):
     return np.array([mx*z + cx, my*z + cy, z])
 
@@ -53,20 +40,17 @@ def b(x, y):
 
 
 def What(z, sigma_x, sigma_y, sigma_rho):
-    print(sigma_x)
-    print(sigma_y)
-    print(sigma_rho)
     #sigma_rho0=[0, 0, 0]  # FIXME
     _A = A(z)
-    #_W = np.diag([1/sigma_x**2, 1/sigma_x**2, 1/sigma_x**2, 1/sigma_y**2, 1/sigma_y**2, 1/sigma_y**2])
-    _W = np.array([
-        [1./sigma_x[0], 0, 0, 0./sigma_rho[0], 0, 0],
-        [0, 1./sigma_x[1], 0, 0, 0./sigma_rho[1], 0],
-        [0, 0, 1./sigma_x[2], 0, 0, 0./sigma_rho[2]],
-        [0./sigma_rho[0], 0, 0, 1./sigma_y[0], 0, 0],
-        [0, 0./sigma_rho[1], 0, 0, 1./sigma_y[1], 0],
-        [0, 0, 0./sigma_rho[2], 0, 0, 1./sigma_y[2]],
-    ])
+    _W = np.diag([1/sigma_x[0]**2, 1/sigma_x[1]**2, 1/sigma_x[2]**2, 1/sigma_y[0]**2, 1/sigma_y[1]**2, 1/sigma_y[2]**2])
+    #_W = np.array([ TODO!!
+    #    [1./sigma_x[0]**2, 0, 0, 0./sigma_rho[0], 0, 0],
+    #    [0, 1./sigma_x[1]**2, 0, 0, 0./sigma_rho[1], 0],
+    #    [0, 0, 1./sigma_x[2]**2, 0, 0, 0./sigma_rho[2]],
+    #    [0./sigma_rho[0]/sigma_x[0]/sigma_y[0], 0, 0, 1./sigma_y[0]**2, 0, 0],
+    #    [0, 0./sigma_rho[1]/sigma_x[1]/sigma_y[1], 0, 0, 1./sigma_y[1]**2, 0],
+    #    [0, 0, 0./sigma_rho[2]/sigma_x[2]/sigma_y[2], 0, 0, 1./sigma_y[2]**2],
+    #])
     return (
         np.identity(_A.shape[0]) - _A @ np.linalg.inv(
             _A.transpose() @ _W @ _A
@@ -74,36 +58,15 @@ def What(z, sigma_x, sigma_y, sigma_rho):
     ).transpose() @ _W
 
 
-def dr_da_layer(x, y, mx, my):
-    spacer = 6
-    
-    #drda_x = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
-    #drda_y = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
-    drda_x = lambda x, y: np.array([-1, 0, 0, 0, 0, y]) * RESCALING
-    drda_y = lambda x, y: np.array([0, -1, 0, 0, 0, -x]) * RESCALING
-    #drda_x = lambda x, y: np.array([-1, 0, mx, mx*y, -mx*x, y]) * RESCALING
-    #drda_y = lambda x, y: np.array([0, -1, my, my*y, -my*x, -x]) * RESCALING
-    
-    return np.array([
-        # --- x ---
-        [*drda_x(x[0], y[0]), *np.zeros(spacer), *np.zeros(spacer)],  # L0
-        [*np.zeros(spacer), *drda_x(x[1], y[1]), *np.zeros(spacer)],  # L1
-        [*np.zeros(spacer), *np.zeros(spacer), *drda_x(x[2], y[2])],  # L2
-        # --- y ---
-        [*drda_y(x[0], y[0]), *np.zeros(spacer), *np.zeros(spacer)],  # L0
-        [*np.zeros(spacer), *drda_y(x[1], y[1]), *np.zeros(spacer)],  # L1
-        [*np.zeros(spacer), *np.zeros(spacer), *drda_y(x[2], y[2])],  # L2
-    ])
-
-
 def dr_da_module(x, y, mx, my):
     spacer = 6
-    #drda_x = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
-    #drda_y = lambda x, y: np.array([0, 0, 0, 0, 0, 0]) * RESCALING
-    drda_x = lambda x, y: np.array([-1, 0, 0, 0, 0, y]) * RESCALING
-    drda_y = lambda x, y: np.array([0, -1, 0, 0, 0, -x]) * RESCALING
-    #drda_x = lambda x, y: np.array([-1, 0, mx, mx*y, -mx*x, y]) * RESCALING
-    #drda_y = lambda x, y: np.array([0, -1, my, my*y, -my*x, -x]) * RESCALING
+    # x, y, z, alpha, beta, gamma
+    #drda_x = lambda x, y: np.array([-1, 0, mx, 0, 0, 0]) * RESCALING
+    #drda_y = lambda x, y: np.array([0, -1, my, 0, 0, 0]) * RESCALING
+    #drda_x = lambda x, y: np.array([-1, 0, 0, 0, 0, y]) * RESCALING
+    #drda_y = lambda x, y: np.array([0, -1, 0, 0, 0, -x]) * RESCALING
+    drda_x = lambda x, y: np.array([-1, 0, mx, mx*y, -mx*x, y]) * RESCALING
+    drda_y = lambda x, y: np.array([0, -1, my, my*y, -my*x, -x]) * RESCALING
     
     return np.array([
         # --- x ---
@@ -135,19 +98,19 @@ def build_alignment_chi2_equation_module(df):
         module1 = x[18]
         module2 = x[19]
 
-        #sigma_x_ = x[20:23]
-        #sigma_y_ = x[23:26]
-        #sigma_rho_ = x[26:29]
-        from constants import sigma_x as s_x
-        from constants import sigma_y as s_y
-        sigma_x_ = [s_x ** 2, s_x ** 2, s_x ** 2]
-        sigma_y_ = [s_y ** 2, s_y ** 2, s_y ** 2]
-        sigma_rho_ = [0,0,0]
+        sigma_x_ = x[20:23]
+        sigma_y_ = x[23:26]
+        # sigma_rho_ = x[26:29]
+        #from constants import sigma_x as s_x
+        #from constants import sigma_y as s_y
+        #sigma_x_ = [s_x ** 2, s_x ** 2, s_x ** 2]
+        #sigma_y_ = [s_y ** 2, s_y ** 2, s_y ** 2]
+        sigma_rho_ = [0,0,0]  # FIXME Use what is given instead of focing 0
 
 
         # Module Components
-        _t = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ r_
-        _M = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ dr_da_layer(x_, y_, *m_)
+        _t = dr_da_module(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ r_
+        _M = dr_da_module(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ dr_da_module(x_, y_, *m_)
         
         i0 = int(module_index(0, module0))
         i1 = int(module_index(1, module1))
@@ -170,38 +133,6 @@ def build_alignment_chi2_equation_module(df):
         M[i2:, i1:][:6, :6] += _M[12:,  6:][:6, :6]
         M[i2:, i2:][:6, :6] += _M[12:, 12:][:6, :6]
     
-    return t, M
-
-
-def build_alignment_chi2_equation_layer(df):
-    dim = 18
-    t =  np.zeros(dim)
-    M = np.zeros((dim, dim))
-    # Initalize as np array and sum while iterating
-    for _, row in df.iterrows():
-        x = row.values
-
-        x_ = x[0:3]
-        y_ = x[3:6]
-        z_ = x[6:9]
-        m_ = x[9:11]
-        r_ = x[11:17]
-
-        #sigma_x_ = x[17:20]
-        #sigma_y_ = x[20:23]
-        #sigma_rho_ = x[23:26]
-        from constants import sigma_x as s_x
-        from constants import sigma_y as s_y
-        sigma_x_ = [s_x ** 2, s_x ** 2, s_x ** 2]
-        sigma_y_ = [s_y ** 2, s_y ** 2, s_y ** 2]
-        sigma_rho_ = [0,0,0]
-        
-        # Layer Components
-        _t = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ r_
-        _M = dr_da_layer(x_, y_, *m_).transpose() @ What(z_, sigma_x_, sigma_y_, sigma_rho_) @ dr_da_layer(x_, y_, *m_)
-                
-        t += _t
-        M += _M
     return t, M
 
 
@@ -244,8 +175,11 @@ def solve_alignment_chi2_equation(t, M, output_dir, cutoff, plot=True):
         plt.ylabel("Eigenvalue Magnitude")
         plt.legend()
         plt.tight_layout()
-        plt.savefig(os.path.join(output_dir, f"spectral_decomposition.pdf"))
-        plt.savefig(os.path.join(output_dir, f"spectral_decomposition.png"))
+        if output_dir is not None:
+            plt.savefig(os.path.join(output_dir, f"spectral_decomposition.pdf"))
+            plt.savefig(os.path.join(output_dir, f"spectral_decomposition.png"))
+        else:
+            plt.show()
         plt.close()
     
     w = np.where(w > cutoff, w, 0)
@@ -264,58 +198,31 @@ def save_and_store_results_module(a, Minv, output_dir):
 
     result_table = pd.DataFrame({
         r"L0M0": unp.uarray(a[module_index(0, 0):module_index(0, 0)+6],  MinvDiagonal[module_index(0, 0):module_index(0, 0)+6] ** 0.5) * 1000,
-        r"L1M0": unp.uarray(a[module_index(1, 0):module_index(1, 0)+6],  MinvDiagonal[module_index(1, 0):module_index(1, 0)+6] ** 0.5) * 1000,
-        r"L2M0": unp.uarray(a[module_index(2, 0):module_index(2, 0)+6],  MinvDiagonal[module_index(2, 0):module_index(2, 0)+6] ** 0.5) * 1000,
-
         r"L0M1": unp.uarray(a[module_index(0, 1):module_index(0, 1)+6],  MinvDiagonal[module_index(0, 1):module_index(0, 1)+6] ** 0.5) * 1000,
-        r"L1M1": unp.uarray(a[module_index(1, 1):module_index(1, 1)+6],  MinvDiagonal[module_index(1, 1):module_index(1, 1)+6] ** 0.5) * 1000,
-        r"L2M1": unp.uarray(a[module_index(2, 1):module_index(2, 1)+6],  MinvDiagonal[module_index(2, 1):module_index(2, 1)+6] ** 0.5) * 1000,
-
         r"L0M2": unp.uarray(a[module_index(0, 2):module_index(0, 2)+6],  MinvDiagonal[module_index(0, 2):module_index(0, 2)+6] ** 0.5) * 1000,
-        r"L1M2": unp.uarray(a[module_index(1, 2):module_index(1, 2)+6],  MinvDiagonal[module_index(1, 2):module_index(1, 2)+6] ** 0.5) * 1000,
-        r"L2M2": unp.uarray(a[module_index(2, 2):module_index(2, 2)+6],  MinvDiagonal[module_index(2, 2):module_index(2, 2)+6] ** 0.5) * 1000,
-
         r"L0M3": unp.uarray(a[module_index(0, 3):module_index(0, 3)+6],  MinvDiagonal[module_index(0, 3):module_index(0, 3)+6] ** 0.5) * 1000,
-        r"L1M3": unp.uarray(a[module_index(1, 3):module_index(1, 3)+6],  MinvDiagonal[module_index(1, 3):module_index(1, 3)+6] ** 0.5) * 1000,
-        r"L2M3": unp.uarray(a[module_index(2, 3):module_index(2, 3)+6],  MinvDiagonal[module_index(2, 3):module_index(2, 3)+6] ** 0.5) * 1000,
-        
         r"L0M4": unp.uarray(a[module_index(0, 4):module_index(0, 4)+6],  MinvDiagonal[module_index(0, 4):module_index(0, 4)+6] ** 0.5) * 1000,
-        r"L1M4": unp.uarray(a[module_index(1, 4):module_index(1, 4)+6],  MinvDiagonal[module_index(1, 4):module_index(1, 4)+6] ** 0.5) * 1000,
-        r"L2M4": unp.uarray(a[module_index(2, 4):module_index(2, 4)+6],  MinvDiagonal[module_index(2, 4):module_index(2, 4)+6] ** 0.5) * 1000,
-
         r"L0M5": unp.uarray(a[module_index(0, 5):module_index(0, 5)+6],  MinvDiagonal[module_index(0, 5):module_index(0, 5)+6] ** 0.5) * 1000,
-        r"L1M5": unp.uarray(a[module_index(1, 5):module_index(1, 5)+6],  MinvDiagonal[module_index(1, 5):module_index(1, 5)+6] ** 0.5) * 1000,
-        r"L2M5": unp.uarray(a[module_index(2, 5):module_index(2, 5)+6],  MinvDiagonal[module_index(2, 5):module_index(2, 5)+6] ** 0.5) * 1000,
-
         r"L0M6": unp.uarray(a[module_index(0, 6):module_index(0, 6)+6],  MinvDiagonal[module_index(0, 6):module_index(0, 6)+6] ** 0.5) * 1000,
-        r"L1M6": unp.uarray(a[module_index(1, 6):module_index(1, 6)+6],  MinvDiagonal[module_index(1, 6):module_index(1, 6)+6] ** 0.5) * 1000,
-        r"L2M6": unp.uarray(a[module_index(2, 6):module_index(2, 6)+6],  MinvDiagonal[module_index(2, 6):module_index(2, 6)+6] ** 0.5) * 1000,
-
         r"L0M7": unp.uarray(a[module_index(0, 7):module_index(0, 7)+6],  MinvDiagonal[module_index(0, 7):module_index(0, 7)+6] ** 0.5) * 1000,
+
+        r"L1M0": unp.uarray(a[module_index(1, 0):module_index(1, 0)+6],  MinvDiagonal[module_index(1, 0):module_index(1, 0)+6] ** 0.5) * 1000,
+        r"L1M1": unp.uarray(a[module_index(1, 1):module_index(1, 1)+6],  MinvDiagonal[module_index(1, 1):module_index(1, 1)+6] ** 0.5) * 1000,
+        r"L1M2": unp.uarray(a[module_index(1, 2):module_index(1, 2)+6],  MinvDiagonal[module_index(1, 2):module_index(1, 2)+6] ** 0.5) * 1000,
+        r"L1M3": unp.uarray(a[module_index(1, 3):module_index(1, 3)+6],  MinvDiagonal[module_index(1, 3):module_index(1, 3)+6] ** 0.5) * 1000,
+        r"L1M4": unp.uarray(a[module_index(1, 4):module_index(1, 4)+6],  MinvDiagonal[module_index(1, 4):module_index(1, 4)+6] ** 0.5) * 1000,
+        r"L1M5": unp.uarray(a[module_index(1, 5):module_index(1, 5)+6],  MinvDiagonal[module_index(1, 5):module_index(1, 5)+6] ** 0.5) * 1000,
+        r"L1M6": unp.uarray(a[module_index(1, 6):module_index(1, 6)+6],  MinvDiagonal[module_index(1, 6):module_index(1, 6)+6] ** 0.5) * 1000,
         r"L1M7": unp.uarray(a[module_index(1, 7):module_index(1, 7)+6],  MinvDiagonal[module_index(1, 7):module_index(1, 7)+6] ** 0.5) * 1000,
+
+        r"L2M0": unp.uarray(a[module_index(2, 0):module_index(2, 0)+6],  MinvDiagonal[module_index(2, 0):module_index(2, 0)+6] ** 0.5) * 1000,
+        r"L2M1": unp.uarray(a[module_index(2, 1):module_index(2, 1)+6],  MinvDiagonal[module_index(2, 1):module_index(2, 1)+6] ** 0.5) * 1000,
+        r"L2M2": unp.uarray(a[module_index(2, 2):module_index(2, 2)+6],  MinvDiagonal[module_index(2, 2):module_index(2, 2)+6] ** 0.5) * 1000,
+        r"L2M3": unp.uarray(a[module_index(2, 3):module_index(2, 3)+6],  MinvDiagonal[module_index(2, 3):module_index(2, 3)+6] ** 0.5) * 1000,
+        r"L2M4": unp.uarray(a[module_index(2, 4):module_index(2, 4)+6],  MinvDiagonal[module_index(2, 4):module_index(2, 4)+6] ** 0.5) * 1000,
+        r"L2M5": unp.uarray(a[module_index(2, 5):module_index(2, 5)+6],  MinvDiagonal[module_index(2, 5):module_index(2, 5)+6] ** 0.5) * 1000,
+        r"L2M6": unp.uarray(a[module_index(2, 6):module_index(2, 6)+6],  MinvDiagonal[module_index(2, 6):module_index(2, 6)+6] ** 0.5) * 1000,
         r"L2M7": unp.uarray(a[module_index(2, 7):module_index(2, 7)+6],  MinvDiagonal[module_index(2, 7):module_index(2, 7)+6] ** 0.5) * 1000,
-        
-    }, index=result_cols).transpose()
-
-    result_table.to_pickle(os.path.join(output_dir, "result_table.pkl"))
-    
-    for col in result_table.columns:
-        result_table[col] = result_table[col].apply(lambda x: f"{x:.2f}")
-
-    result_table.to_latex(os.path.join(output_dir, "result_table.tex"), escape=False)
-
-    return result_table
-
-
-def save_and_store_results_layer(a, Minv, output_dir):
-    a *= np.array(3*[*RESCALING])
-    Minv *= np.array(3*[*RESCALING]) ** 2
-    MinvDiagonal = copy(Minv.diagonal())
-
-    result_table = pd.DataFrame({
-        r"L0": unp.uarray(a[layer_index(0):layer_index(0)+6],  MinvDiagonal[layer_index(0):layer_index(0)+6] ** 0.5) * 1000,
-        r"L1": unp.uarray(a[layer_index(1):layer_index(1)+6],  MinvDiagonal[layer_index(1):layer_index(1)+6] ** 0.5) * 1000,
-        r"L2": unp.uarray(a[layer_index(2):layer_index(2)+6],  MinvDiagonal[layer_index(2):layer_index(2)+6] ** 0.5) * 1000,
         
     }, index=result_cols).transpose()
 
